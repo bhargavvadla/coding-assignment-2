@@ -1,0 +1,69 @@
+POST http://localhost:4000/register/
+Content-Type: application/json
+
+{
+  "username": "bhargav22",
+  "password": "password",
+  "name": "bhargav vadla",
+  "gender": "male"
+}
+###
+
+POST http://localhost:4000/login/
+Content-Type: application/json
+
+{
+  "username":"bhargav22",
+  "password":"password"
+  
+}
+###
+
+GET http://localhost:4000/users/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyMiIsImlhdCI6MTY0MTEzNjYxOX0.QEusMSN_SD50l78mldG6X_aYCBymMK5xrljtgkdlt50
+###
+
+
+GET http://localhost:4000/user/tweets/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyMiIsImlhdCI6MTY0MTEzNjYxOX0.QEusMSN_SD50l78mldG6X_aYCBymMK5xrljtgkdlt50
+###
+
+GET http://localhost:4000/tweets/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyMiIsImlhdCI6MTY0MTEzNjYxOX0.QEusMSN_SD50l78mldG6X_aYCBymMK5xrljtgkdlt50
+###
+
+POST http://localhost:4000/user/tweets/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyMiIsImlhdCI6MTY0MTEzNjYxOX0.QEusMSN_SD50l78mldG6X_aYCBymMK5xrljtgkdlt50
+Content-Type: application/json
+
+{
+   "tweet": "First Tweet from Bhargav22"
+}
+###
+
+GET http://localhost:4000/user/tweets/feed/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyIiwiaWF0IjoxNjQxMDU5MTg4fQ.TlnJJNofse9BWLDSjbIj7CDWYIxIa-ZeM7zAoIiXfX0
+##
+
+GET http://localhost:4000/user/following/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyIiwiaWF0IjoxNjQxMDU5MTg4fQ.TlnJJNofse9BWLDSjbIj7CDWYIxIa-ZeM7zAoIiXfX0
+###
+
+GET http://localhost:4000/user/followers/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyIiwiaWF0IjoxNjQxMDU5MTg4fQ.TlnJJNofse9BWLDSjbIj7CDWYIxIa-ZeM7zAoIiXfX0
+###
+
+GET http://localhost:4000/tweets/3/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyIiwiaWF0IjoxNjQxMDU5MTg4fQ.TlnJJNofse9BWLDSjbIj7CDWYIxIa-ZeM7zAoIiXfX0
+###
+
+GET http://localhost:4000/tweets/5/likes/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyIiwiaWF0IjoxNjQxMDU5MTg4fQ.TlnJJNofse9BWLDSjbIj7CDWYIxIa-ZeM7zAoIiXfX0
+###
+
+GET http://localhost:4000/tweets/4/replies/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyIiwiaWF0IjoxNjQxMDU5MTg4fQ.TlnJJNofse9BWLDSjbIj7CDWYIxIa-ZeM7zAoIiXfX0
+###
+
+DELETE http://localhost:4000/tweets/1/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJoYXJnYXYyIiwiaWF0IjoxNjQxMDU5MTg4fQ.TlnJJNofse9BWLDSjbIj7CDWYIxIa-ZeM7zAoIiXfX0
