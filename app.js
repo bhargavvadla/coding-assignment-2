@@ -138,7 +138,6 @@ app.get("/user/tweets/feed/", authentication, async (req, res) => {
         ORDER BY tweet.date_time DESC
         LIMIT 4
         `);
-  // LIMIT 4
 
   res.status(200);
   res.send(
@@ -190,14 +189,17 @@ app.get("/user/followers/", authentication, async (req, res) => {
   console.log(user, userId);
 
   const userFollowersNames = await db.all(`
-        SELECT DISTINCT name FROM user
-        INNER JOIN 
-            (
-                SELECT * from  follower
-                WHERE
-                follower.following_user_id = ${userId}
-            )as followers
-        ON followers.follower_id = user.user_id
+
+                SELECT name FROM user
+                INNER JOIN
+                (
+                    SELECT * from  follower
+                    WHERE
+                    follower.following_user_id = ${userId}
+                )
+                AS followers
+                ON followers.follower_user_id = user.user_id 
+
   `);
 
   res.status(200);
@@ -218,62 +220,70 @@ app.get("/tweets/:tweetId/", authentication, async (req, res) => {
   console.log(userId);
 
   const particularFollowingTweets = await db.all(`
-  
-  SELECT
-  tweet,
-  likes, 
-  replies,
-  date_time
-        FROM 
-        (
-            SELECT following_user_id FROM follower
-            WHERE follower.follower_user_id = ${userId}
-            )
-            AS followings
-            
-            INNER JOIN 
-            (
-                
-                SELECT
-                likes.user_id, 
-                    likes.tweet,
-                    likes.likes,
-                    replies.replies,
-                    likes.date_time
-                    FROM 
 
-                    (   SELECT
-                            tweet.user_id, 
-                            count(like_id) as likes,
-                            tweet.tweet_id,
-                            tweet.date_time as date_time,
-                            tweet
-                            FROM tweet
-                            INNER JOIN like 
-                            ON like.tweet_id = tweet.tweet_id
-                            GROUP BY tweet.tweet_id
+            SELECT
+                all_tweets.tweet,
+                all_tweets.likes,
+                all_tweets.replies,
+                all_tweets.date_time
+            FROM
+
+                    (
+                        SELECT * FROM follower
+                        WHERE follower_user_id = ${userId}
+                    )
+                    AS followings 
+                    INNER JOIN 
+                    (
+                        SELECT
+                            likes.tweet_id,
+                            likes.tweet,
+                            likes.likes,
+                            replies.replies,
+                            likes.date_time,
+                            likes.user_id
+                        FROM
+                            (
+                                SELECT 
+                                    tweet.tweet_id,
+                                    tweet.tweet,
+                                    tweet.user_id,
+                                    count(like_id) as likes,
+                                    date_time
+                                FROM 
+                                    (
+                                        SELECT * FROM tweet
+                                        
+                                    ) tweet
+                                    LEFT JOIN like
+                                ON like.tweet_id = tweet.tweet_id
+
+                                GROUP BY tweet.tweet_id
                             )
-                            AS likes 
+                            AS likes
                             INNER JOIN 
                             (
-                                SELECT
-                                tweet.user_id, 
-                                count(reply_id) as replies,
-                                tweet.tweet_id 
-                                FROM tweet
-                                INNER JOIN reply
+                                SELECT 
+                                    tweet.tweet_id,
+                                    count(reply_id) as replies
+                                FROM 
+                                    (
+                                        SELECT * FROM tweet
+                                    ) tweet
+                                    LEFT JOIN reply
                                 ON reply.tweet_id = tweet.tweet_id
-                                GROUP BY tweet.tweet_id
-                                )
-                    AS replies
-                ON likes.tweet_id = replies.tweet_id
-                
-                WHERE likes.tweet_id = ${tweetId}
-            )
-            AS p_tweet
 
-            ON p_tweet.user_id = followings.following_user_id
-            
+                                GROUP BY tweet.tweet_id
+                            )
+                            AS replies
+                        ON replies.tweet_id = likes.tweet_id
+                    )
+                    AS all_tweets
+
+                    on all_tweets.user_id = followings.following_user_id
+
+                    WHERE all_tweets.tweet_id = ${tweetId}
+
 
             `);
 
@@ -415,7 +425,7 @@ app.get("/tweets/:tweetId/replies/", authentication, async (req, res) => {
     res.send("Invalid Request");
   } else {
     res.status(200);
-    res.send(particularFollowingTweets);
+    res.send({ replies: particularFollowingTweets });
   }
 });
 
@@ -430,71 +440,67 @@ app.get("/user/tweets/", authentication, async (req, res) => {
   const userId = user.user_id;
   //   const userId = 2;
   console.log(user, userId);
+  //   likes.tweet_id,
 
   const userTweets = await db.all(`
-     SELECT 
-            likes.user_id,
-            likes.tweet,
-            likes.likes,
-            replies.replies,
-            likes.date_time
-        FROM
-
-            (
                 SELECT
-                    tweets.user_id, 
-                    tweets.tweet_id,
-                    tweets.tweet,
-                    count(like_id) as likes,
-                    tweets.date_time
-                FROM like
-                INNER JOIN 
-                (
-                    SELECT * FROM tweet
-                    WHERE tweet.user_id = ${userId}
-                )
-                AS tweets
-                
-                ON like.tweet_id = tweets.tweet_id
-                GROUP BY tweets.tweet_id
-        )
-        AS likes
-        INNER JOIN 
+                    likes.tweet,
+                    likes.likes,
+                    replies.replies,
+                    likes.date_time
+                FROM
+                        (
+                            SELECT 
+                                tweet.tweet_id,
+                                tweet.tweet,
+                                count(like_id) as likes,
+                                date_time
+                            FROM 
+                                (
+                                    SELECT * FROM tweet
+                                    WHERE tweet.user_id = ${userId}
+                                ) tweet
+                                LEFT JOIN like
+                            ON like.tweet_id = tweet.tweet_id
 
-        (
-                SELECT 
-                    tweets.tweet_id,
-                    tweets.tweet,
-                    count(reply_id) as replies,
-                    tweets.date_time
-                FROM reply
-                INNER JOIN 
-                (
-                    SELECT * FROM tweet
-                    WHERE tweet.user_id = ${userId}
-                )
-                AS tweets
-                
-                ON reply.tweet_id = tweets.tweet_id
-                GROUP BY tweets.tweet_id
-        )
-        AS replies
+                            GROUP BY tweet.tweet_id
+                        )
+                        AS likes
+                        INNER JOIN 
 
-        ON replies.tweet_id = likes.tweet_id
+                        (
+                            SELECT 
+                                tweet.tweet_id,
+                                count(reply_id) as replies
+                            FROM 
+                                (
+                                    SELECT * FROM tweet
+                                    WHERE tweet.user_id = ${userId}
+                                ) tweet
+                                LEFT JOIN reply
+                            ON reply.tweet_id = tweet.tweet_id
+
+                            GROUP BY tweet.tweet_id
+                        )
+                        AS replies
+
+                        ON replies.tweet_id = likes.tweet_id
+               
+               
         
     `);
 
-  if (userTweets.length === 0) {
+  if (userTweets === undefined) {
     res.status(401);
     res.send("Invalid Request");
   } else {
     res.status(200);
     res.send(
       userTweets.map((eachUser) => ({
-        tweeted_user_id: eachUser.user_id,
+        // tweetId: eachUser.tweet_id,
         tweet: eachUser.tweet,
         likes: eachUser.likes,
-        reply: eachUser.replies,
+        replies: eachUser.replies,
         dateTime: eachUser.date_time,
       }))
     );
@@ -506,8 +512,8 @@ app.post("/user/tweets/", authentication, async (req, res) => {
   const { username } = req;
   const { tweet: tweetText } = req.body;
 
-  const tweets = await db.all(`SELECT count(*) as tweets_count FROM tweet`);
-  const tweetsCount = tweets[0]["tweets_count"] + 3;
+  const tweets = await db.get(`SELECT count(*) as tweets_count FROM tweet`);
+  const tweetsCount = tweets.tweets_count + 1;
 
   const user = await db.get(
     `SELECT user_id FROM user WHERE username='${username}'`
@@ -527,16 +533,16 @@ app.post("/user/tweets/", authentication, async (req, res) => {
   }:${date.getMinutes()}:${date.getSeconds()}`;
 
   let dateTimeString = dateString + " " + timeString;
-  console.log(dateTimeString);
+  console.log(dateTimeString, new Date(dateString));
 
   await db.run(`
-        INSERT INTO tweet VALUES
-          (
-              ${tweetsCount},
-              '${tweetText}',
-              ${userId},
-              '${dateTimeString}'
-              )`);
+            INSERT INTO tweet VALUES
+              (
+                  ${tweetsCount},
+                  '${tweetText}',
+                  ${userId},
+                  '${dateTimeString}'
+                  )`);
   res.send("Created a Tweet");
 });
 
@@ -576,8 +582,23 @@ app.delete("/tweets/:tweetId/", authentication, async (req, res) => {
   }
 });
 
+//GET ALL User's API
+app.get("/users/", authentication, async (req, res) => {
+  res.send(await db.all(`Select * from user`));
+});
+
 //All Tweets API
 app.get("/tweets/", authentication, async (req, res) => {
   res.send(await db.all(`Select * from tweet`));
+});
+
+//All Follower API
+app.get("/follower/", authentication, async (req, res) => {
+  res.send(await db.all(`Select * from follower`));
+});
+
+//All Reply API
+app.get("/replies/", authentication, async (req, res) => {
+  res.send(await db.all(`Select * from reply`));
 });
 module.exports = app;
