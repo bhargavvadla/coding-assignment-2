@@ -381,43 +381,43 @@ app.get("/tweets/:tweetId/replies/", authentication, async (req, res) => {
   console.log(userId);
 
   const particularFollowingTweets = await db.all(`
-  
-            SELECT username,reply FROM USER
-            INNER JOIN 
-                (
-                    SELECT * FROM 
 
+        SELECT name, reply FROM user
+        INNER JOIN 
+            (    
+                SELECT
+                    following_tweet.tweet_id, 
+                    following_tweet.tweet,
+                    reply.reply,
+                    following_tweet.date_time
+                FROM reply
+                INNER JOIN 
+                    (    SELECT
+                            tweet_id,
+                            user_id,
+                            tweet,
+                            date_time
+                        FROM tweet   
+                        INNER JOIN 
                         (
-                            SELECT * FROM follower
-                            WHERE follower_user_id = ${userId}
+                            SELECT following_user_id FROM follower
+                            WHERE follower.follower_user_id = ${userId}
                         )
                         AS followings
-                        INNER JOIN
-                        (   
+                        ON followings.following_user_id = tweet.user_id  
 
-                            SELECT
-                                    p_tweet.tweet_id as tweet_id,
-                                    p_tweet.user_id as tweeted_user_id,
-                                    reply.user_id as replied_user_id,
-                                    reply,
-                                    p_tweet.tweet,
-                                    date_time
-                            FROM 
-                                (
-                                    SELECT * FROM tweet
-                                    WHERE tweet_id = ${tweetId}
-                                )
-                                AS p_tweet
-                            INNER JOIN reply
-                            ON reply.tweet_id = p_tweet.tweet_id
-                        )
-                        AS tweets
-
-                        ON tweets.tweeted_user_id = followings.following_user_id
+                        WHERE tweet_id = ${tweetId}
+                    )
+                    AS following_tweet
+                    
+                    ON following_tweet.tweet_id = reply.reply_id
                 )
-                AS particular_tweet
-            
-            ON particular_tweet.replied_user_id = user.user_id
+
+                AS replies
+
+                ON replies.tweet_id = user.user_id
+
+                        
     `);
 
   if (particularFollowingTweets.length === 0) {
@@ -543,6 +543,7 @@ app.post("/user/tweets/", authentication, async (req, res) => {
                   ${userId},
                   '${dateTimeString}'
                   )`);
+
   res.send("Created a Tweet");
 });
 
